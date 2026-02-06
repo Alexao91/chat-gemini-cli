@@ -40,21 +40,27 @@ fi
 # 3. Homebrew Installation (als aiuser)
 echo -e "${GREEN}[3/7] Installiere Homebrew & Node...${NC}"
 
+# WICHTIG: Erst Verzeichnis wechseln, damit aiuser Schreibrechte im aktuellen Ordner hat
+cd "$HOME_DIR"
+
 sudo -u "$USER_NAME" bash <<EOF
 set -e
 export NONINTERACTIVE=1
+
+# Sicherheitshalber auch im Subshell ins Home wechseln
+cd $HOME_DIR
 
 # Homebrew installieren (falls nicht da)
 if [ ! -d "/home/linuxbrew/.linuxbrew" ]; then
     /bin/bash -c "\$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
 fi
 
-# Umgebungsvariablen in .bashrc schreiben
-if ! grep -q "eval \"\$(\/home\/linuxbrew\/.linuxbrew\/bin\/brew shellenv)\"" $HOME_DIR/.bashrc; then
-    echo 'eval "\$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> $HOME_DIR/.bashrc
+# Umgebungsvariablen setzen
+if ! grep -q "eval \"\$(\/home\/linuxbrew\/.linuxbrew\/bin\/brew shellenv)\"" .bashrc; then
+    echo 'eval "\$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"' >> .bashrc
 fi
 
-# Für die aktuelle Session aktivieren
+# Pfad für diese Session laden
 eval "\$(/home/linuxbrew/.linuxbrew/bin/brew shellenv)"
 
 # Node und Gemini CLI installieren
@@ -62,11 +68,9 @@ echo "Installiere Node und Gemini-CLI via Brew..."
 brew install node
 brew install gemini-cli
 
-# Config Ordner vorbereiten (für deinen manuellen Token)
-mkdir -p $HOME_DIR/.config/gemini-cli
-# Oder je nach Version auch .gemini, wir erstellen beides zur Sicherheit
-mkdir -p $HOME_DIR/.gemini
-
+# Config Ordner vorbereiten
+mkdir -p .config/gemini-cli
+mkdir -p .gemini
 EOF
 
 # 4. Verzeichnisse erstellen
@@ -83,7 +87,7 @@ python3 -m venv venv
 source venv/bin/activate
 pip install fastapi uvicorn pydantic python-multipart uvicorn[standard]
 
-# Wir erstellen den Python Wrapper Code
+# Python Wrapper Code
 cat << 'PY_END' > main.py
 import subprocess
 import os
